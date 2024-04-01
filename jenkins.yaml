@@ -1,0 +1,35 @@
+#https://www.theserverside.com/blog/Coffee-Talk-Java-News-Stories-and-Opinions/jenkins-ubuntu-20-install-git-jdk-java-ci-cd
+--- 
+- hosts: all
+  gather_facts: yes
+  remote_user: root
+  tasks:
+  - name: install java
+    apt: 
+      name: openjdk-8-jdk
+      state: present
+    when: ansible_os_family == "ubuntu"
+  
+  - name: add jenkins key
+    shell: wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+  
+  - name: add jenkins daemon
+    shell: sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+
+  - name: install jenkins
+    apt: 
+      name: jenkins
+      state: present
+      update_cache: yes
+    notify: 
+    - Restart Jenkins
+    when: ansible_os_family == "ubuntu"
+  handlers:
+    - name: Restart Jenkins
+      service: 
+        name: jenkins
+        state: restarted
+        enabled: yes
+
+    
+
