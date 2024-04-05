@@ -1,0 +1,33 @@
+---
+- name: vault testing
+  hosts: all
+  become: yes
+  var_files: 
+  - user_info.yml
+  - creds.yml
+  tasks: 
+  - name: checking directory exist or not
+    ansible.builtin.stat: 
+      path: /opt/vaulttest
+    register: existance
+
+  - name: Create a directory
+    ansible.builtin.file: 
+      path: /opt/vaulttest
+      state: directory
+      mode: 0755
+      recurse: yes
+    when: existance.exists
+
+  - name: Installing Git
+    ansible.builtin.apt:
+      name: git 
+      update_cache: yes
+      state: present
+      enabled: yes
+
+  - name: Git clone Repository
+    ansible.builtin.git: 
+      repo: https://{{ username }}:{{ password | password_hash('256')}}@github.com/satyamuralidhar/crossplane-awsinfra-module.git
+      dest: /opt/vaulttest
+    when: existance.exists
