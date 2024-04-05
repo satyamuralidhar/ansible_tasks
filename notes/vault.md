@@ -1,4 +1,4 @@
-###create a file with password
+### create a file with password
 
     $ echo "password: mypasswd" > creds.yaml
 
