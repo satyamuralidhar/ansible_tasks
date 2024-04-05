@@ -1,0 +1,67 @@
+#Reference:
+#-----------
+#https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04
+
+# step1:
+# ------
+# $sudo apt install wget ca-certificates
+# $wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+# $sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
+
+# step2:
+# ------
+# $sudo apt update
+# $apt install postgresql postgresql-contrib
+
+# step3:
+# ------
+# $service postgresql status
+
+---
+- hosts: all
+  become: yes
+  tasks: 
+  - name: Install dependencies
+    ansible.builtin.apt: 
+      name: "{{ item }}"
+      update_cache: yes
+      state: present
+    loop: 
+      - wget
+      - ca-certificates
+
+  - name: adding apt-key
+    ansible.builtin.apt_key: 
+      url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+      state: present
+
+  - name: adding pgp list 
+    ansible.builtin.linelifile:
+      path: /etc/apt/sources.list.d/pgdg.list
+      line: deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main
+      create: true
+
+  - name: update cache 
+    ansible.builtin.apt:
+      update_cache: yes
+
+  - name: Install Postgress
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: present
+      enabled: true
+    loop:
+     - postgresql
+     - postgresql postgresql-contrib
+    notify: 
+    - Restart Postgres service
+  
+  handlers:
+  - name: Restart Postgres service
+    ansible.builtin.service: 
+      name: "{{ item }}"
+      state: restarted
+    loop:
+     - postgresql
+     - postgresql postgresql-contrib
+
